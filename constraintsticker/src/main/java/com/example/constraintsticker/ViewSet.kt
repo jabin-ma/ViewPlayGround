@@ -65,6 +65,7 @@ class ViewSet : ConstraintHelper {
             }
         }
         a.recycle()
+        setWillNotDraw(true)
     }
 
     override fun onAttachedToWindow() {
@@ -302,13 +303,10 @@ class ViewSet : ConstraintHelper {
             val shifty = m21 * dx + m22 * dy - dy + mShiftY
             view.translationX = shiftx
             view.translationY = shifty
-            super.setTranslationX(shiftx)
-            super.setTranslationY(shifty)
             view.scaleY = mScaleY
             view.scaleX = mScaleX
             if (!java.lang.Float.isNaN(mGroupRotateAngle)) {
                 view.rotation = mGroupRotateAngle
-                super.setRotation(mGroupRotateAngle)
             }
         }
     }

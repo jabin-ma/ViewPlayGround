@@ -5,6 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:paddingTop="100dp"
     tools:context=".MainActivity">
 
     <ImageView
@@ -33,8 +34,6 @@
         android:id="@+id/action_widget_pack"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="@drawable/bg_frame"
-        android:padding="@dimen/sticker_layout_action_viewset_padding"
         android:visibility="gone"
         app:constraint_referenced_ids="action_delete,action_resize,action_pin,action_move" />
 

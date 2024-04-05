@@ -9,7 +9,8 @@ import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintHelper
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet.Constraint
-import kotlin.math.atan
+import androidx.core.content.res.ResourcesCompat
+import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.sqrt
 
@@ -72,9 +73,14 @@ class StickerLayout(context: Context, attrs: AttributeSet) : ConstraintLayout(co
     }
 
     private fun exitEditMode() {
-        focusedViewId = NO_ID
-        beginTransaction {
-            setVisibility(R.id.action_widget_pack, GONE)
+        if (focusedViewId != NO_ID) {
+            withChild(focusedViewId) {
+                foreground = null
+            }
+            focusedViewId = NO_ID
+            beginTransaction {
+                setVisibility(R.id.action_widget_pack, GONE)
+            }
         }
     }
 
@@ -85,6 +91,9 @@ class StickerLayout(context: Context, attrs: AttributeSet) : ConstraintLayout(co
     private fun enterEditMode(view: Int) {
         exitEditMode()
         focusedViewId = view
+        withChild(focusedViewId) {
+            foreground = ResourcesCompat.getDrawable(resources, R.drawable.bg_frame, null)
+        }
         attachActionView(focusedViewId)
         setOnClickListener {
             exitEditMode()
@@ -159,6 +168,7 @@ class StickerLayout(context: Context, attrs: AttributeSet) : ConstraintLayout(co
     private fun onActionPin(view: Int) {
         findViewById<View>(view).bringToFront()
         findViewById<ViewSet>(R.id.action_widget_pack).bringToFront()
+        constraintSet.apply() // 要重新apply一下 否则位置会不正确
     }
 
     private fun onActionDelete(viewId: Int) {
@@ -166,8 +176,7 @@ class StickerLayout(context: Context, attrs: AttributeSet) : ConstraintLayout(co
         removeView(findViewById(viewId))
     }
 
-
-    inner class MoveAction: RelativeTouchListener() {
+    inner class MoveAction : RelativeTouchListener() {
         private var viewInitialTranslationX = 0F
         private var viewInitialTranslationY = 0F
         private var targetConstraint: Constraint? = null
@@ -224,14 +233,28 @@ class StickerLayout(context: Context, attrs: AttributeSet) : ConstraintLayout(co
         private var viewInitialDiagonal = 0F
         private var viewInitialTranX = 0F
         private var viewInitialTranY = 0F
+        private var viewOnScreenCenterX = 0F
+        private var viewOnScreenCenterY = 0F
+        private var viewInitialRotate = 0F
+        private var downAngle = 0F
 
         override fun onDown(v: View, ev: MotionEvent): Boolean {
-            constraintSet.withConstraint(focusedViewId){
+            constraintSet.withConstraint(focusedViewId) {
                 viewInitialWidth = layout.mWidth.toFloat()
                 viewInitialHeight = layout.mHeight.toFloat()
-                viewInitialDiagonal = sqrt(viewInitialWidth * viewInitialWidth + viewInitialHeight * viewInitialHeight)
+                viewInitialDiagonal =
+                    sqrt(viewInitialWidth * viewInitialWidth + viewInitialHeight * viewInitialHeight)
                 viewInitialTranY = transform.translationY
                 viewInitialTranX = transform.translationX
+                viewInitialRotate = transform.rotation
+            }
+            withChild(focusedViewId) {
+                // 根据父view的位置计算自身的位置, 不能直接调用自身的getLocationOnScreen,因为会包含变换(缩放旋转等等)
+                val parentLocation = IntArray(2)
+                this@StickerLayout.getLocationOnScreen(parentLocation)
+                viewOnScreenCenterX = parentLocation[0] + x + viewInitialWidth / 2
+                viewOnScreenCenterY = parentLocation[1] + y + viewInitialHeight / 2
+                downAngle = ev.absAngle(viewOnScreenCenterX, viewOnScreenCenterY)
             }
             return true
         }
@@ -244,19 +267,27 @@ class StickerLayout(context: Context, attrs: AttributeSet) : ConstraintLayout(co
             dx: Float,
             dy: Float
         ) {
-            val nextWidth = viewInitialWidth + dx * 2 // 缩放后的矩形宽度
-            val nextHeight = viewInitialHeight + dy * 2// 缩放后的矩形高度
+//            val nextWidth = viewInitialWidth + dx * 2 // 缩放后的矩形宽度
+//            val nextHeight = viewInitialHeight + dy * 2// 缩放后的矩形高度
+            val nextWidth = abs(ev.rawX - viewOnScreenCenterX) * 2
+            val nextHeight = abs(ev.rawY - viewOnScreenCenterY) * 2
+
             val nextDiagonal = sqrt(nextWidth * nextWidth + nextHeight * nextHeight) // 缩放后的对角线长度
             val ratio = nextDiagonal / viewInitialDiagonal // 计算他们的比例
             val adjustedWidth = viewInitialWidth * ratio
             val adjustedHeight = viewInitialHeight * ratio
 
+            val curAngle = ev.absAngle(viewOnScreenCenterX, viewOnScreenCenterY)
             beginTransaction {// 将对角线比例应用到长宽中
                 // 沿中心点放大缩小
-                withConstraint(focusedViewId){
-                    setTranslation(focusedViewId,viewInitialTranX + (adjustedWidth - viewInitialWidth) * -0.5F ,
-                        viewInitialTranY + (adjustedHeight - viewInitialHeight) * -0.5F)
+                withConstraint(focusedViewId) {
+                    setTranslation(
+                        focusedViewId,
+                        viewInitialTranX + (adjustedWidth - viewInitialWidth) * -0.5F,
+                        viewInitialTranY + (adjustedHeight - viewInitialHeight) * -0.5F
+                    )
                 }
+                setRotation(focusedViewId, viewInitialRotate + (downAngle - curAngle))
                 constrainHeight(focusedViewId, adjustedHeight.toInt())
                 constrainWidth(focusedViewId, adjustedWidth.toInt())
             }
@@ -293,6 +324,14 @@ private fun normalizeAngle(angle: Float): Float {
 
 private fun ViewGroup.withChild(id: Int, action: View.() -> Unit) {
     findViewById<View>(id).action()
+}
+
+private fun MotionEvent.absAngle(x: Float, y: Float): Float {
+    return ((Math.toDegrees(
+        atan2(
+            x - rawX, y - rawY
+        ).toDouble()
+    ) + 360) % 360).toFloat()
 }
 
 /**

@@ -19,7 +19,7 @@ fun ConstraintSetKt.withConstraint(id: Int, action: ConstraintSet.Constraint.() 
     getConstraint(id).action()
 }
 
-fun ConstraintSetKt.beginTransaction(action: ConstraintSet.() -> Unit) {
+fun ConstraintSetKt.beginTransaction(action: ConstraintSetKt.() -> Unit) {
     action()
     apply()
 }

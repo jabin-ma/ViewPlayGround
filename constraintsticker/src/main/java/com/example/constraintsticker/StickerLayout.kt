@@ -8,11 +8,11 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintHelper
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.constraintlayout.widget.ConstraintSet
 import androidx.constraintlayout.widget.ConstraintSet.Constraint
-import androidx.transition.TransitionManager
+import kotlin.math.atan
 import kotlin.math.atan2
 import kotlin.math.sqrt
+
 
 /**
  * 虚拟相机根图层,添加到其中的view均自动支持手动layout(由用户通过界面按钮控制)
@@ -73,15 +73,13 @@ class StickerLayout(context: Context, attrs: AttributeSet) : ConstraintLayout(co
 
     private fun exitEditMode() {
         focusedViewId = NO_ID
-        withConstraint {
+        beginTransaction {
             setVisibility(R.id.action_widget_pack, GONE)
         }
     }
 
-    private fun withConstraint(anim: Boolean = false, update: ConstraintSet.() -> Unit) {
-        constraintSet.update()
-        if (anim) TransitionManager.beginDelayedTransition(this)
-        constraintSet.applyTo(this)
+    private fun beginTransaction(anim: Boolean = false, update: ConstraintSetKt.() -> Unit) {
+        constraintSet.beginTransaction(update)
     }
 
     private fun enterEditMode(view: Int) {
@@ -189,7 +187,7 @@ class StickerLayout(context: Context, attrs: AttributeSet) : ConstraintLayout(co
             dx: Float,
             dy: Float
         ) {
-            withConstraint {
+            beginTransaction {
                 setTranslation(
                     R.id.action_widget_pack,
                     viewInitialTranslationX + dx,
@@ -223,14 +221,18 @@ class StickerLayout(context: Context, attrs: AttributeSet) : ConstraintLayout(co
     inner class ResizeAndRotateAction : RelativeTouchListener() {
         private var viewInitialWidth = 0F
         private var viewInitialHeight = 0F
-        private var viewInitialRadius = 0F
-        private var targetConstraint: Constraint? = null
+        private var viewInitialDiagonal = 0F
+        private var viewInitialTranX = 0F
+        private var viewInitialTranY = 0F
 
         override fun onDown(v: View, ev: MotionEvent): Boolean {
-            targetConstraint = constraintSet.getConstraint(focusedViewId)
-            viewInitialWidth = targetConstraint!!.layout.mWidth.toFloat()
-            viewInitialHeight = targetConstraint!!.layout.mHeight.toFloat()
-            viewInitialRadius = sqrt(viewInitialWidth * viewInitialWidth + viewInitialHeight * viewInitialHeight)
+            constraintSet.withConstraint(focusedViewId){
+                viewInitialWidth = layout.mWidth.toFloat()
+                viewInitialHeight = layout.mHeight.toFloat()
+                viewInitialDiagonal = sqrt(viewInitialWidth * viewInitialWidth + viewInitialHeight * viewInitialHeight)
+                viewInitialTranY = transform.translationY
+                viewInitialTranX = transform.translationX
+            }
             return true
         }
 
@@ -242,14 +244,21 @@ class StickerLayout(context: Context, attrs: AttributeSet) : ConstraintLayout(co
             dx: Float,
             dy: Float
         ) {
-            val nextWidth = viewInitialWidth + dx // 缩放后的矩形宽度
-            val nextHeight = viewInitialHeight + dy // 缩放后的矩形高度
-            val nextDistance = sqrt(nextWidth * nextWidth + nextHeight * nextHeight) // 缩放后的对角线长度
+            val nextWidth = viewInitialWidth + dx * 2 // 缩放后的矩形宽度
+            val nextHeight = viewInitialHeight + dy * 2// 缩放后的矩形高度
+            val nextDiagonal = sqrt(nextWidth * nextWidth + nextHeight * nextHeight) // 缩放后的对角线长度
+            val ratio = nextDiagonal / viewInitialDiagonal // 计算他们的比例
+            val adjustedWidth = viewInitialWidth * ratio
+            val adjustedHeight = viewInitialHeight * ratio
 
-            val ra = nextDistance / viewInitialRadius // 计算他们的比例
-            withConstraint {// 将对角线比例应用到长宽中
-                constrainHeight(focusedViewId, (viewInitialHeight * ra).toInt())
-                constrainWidth(focusedViewId, (viewInitialWidth * ra).toInt())
+            beginTransaction {// 将对角线比例应用到长宽中
+                // 沿中心点放大缩小
+                withConstraint(focusedViewId){
+                    setTranslation(focusedViewId,viewInitialTranX + (adjustedWidth - viewInitialWidth) * -0.5F ,
+                        viewInitialTranY + (adjustedHeight - viewInitialHeight) * -0.5F)
+                }
+                constrainHeight(focusedViewId, adjustedHeight.toInt())
+                constrainWidth(focusedViewId, adjustedWidth.toInt())
             }
             // 操作按钮也需要跟着动. TODO 和上面的操作 合并到一次事件中 优化性能
             attachActionView(focusedViewId)
@@ -265,9 +274,7 @@ class StickerLayout(context: Context, attrs: AttributeSet) : ConstraintLayout(co
             velX: Float,
             velY: Float
         ) {
-            viewInitialHeight = 0F
-            viewInitialWidth = 0F
-            targetConstraint = null
+
         }
     }
 }

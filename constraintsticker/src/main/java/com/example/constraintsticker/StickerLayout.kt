@@ -12,20 +12,12 @@ import androidx.constraintlayout.widget.ConstraintSet
 import androidx.constraintlayout.widget.ConstraintSet.Constraint
 import androidx.transition.TransitionManager
 import kotlin.math.atan2
-import kotlin.math.pow
 import kotlin.math.sqrt
 
-
-class StickerLayout : ConstraintLayout {
-
-    constructor(context: Context) : super(context)
-    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
-    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(
-        context,
-        attrs,
-        defStyleAttr
-    )
-
+/**
+ * 虚拟相机根图层,添加到其中的view均自动支持手动layout(由用户通过界面按钮控制)
+ */
+class StickerLayout(context: Context, attrs: AttributeSet) : ConstraintLayout(context, attrs) {
 
     private var focusedViewId: Int = NO_ID
 
@@ -60,10 +52,10 @@ class StickerLayout : ConstraintLayout {
                 }
 
                 R.id.action_move -> {
-                    view.setOnTouchListener(Move())
+                    view.setOnTouchListener(MoveAction())
                 }
 
-                R.id.action_resize -> view.setOnTouchListener(Resize())
+                R.id.action_resize -> view.setOnTouchListener(ResizeAndRotateAction())
                 else -> {
                     Log.d(TAG, "onViewAdded: ignore $view")
                 }
@@ -96,16 +88,15 @@ class StickerLayout : ConstraintLayout {
         exitEditMode()
         focusedViewId = view
         attachActionView(focusedViewId)
+        setOnClickListener {
+            exitEditMode()
+        }
     }
 
     private fun attachActionView(viewId: Int) {
         if (viewId != NO_ID) {
             constraintSet.withConstraint(viewId) {
-                val viewHeight = layout.mHeight
-                val viewWidth = layout.mWidth
-                val viewRadius = (sqrt(
-                    viewWidth.toDouble().pow(2.0) + viewHeight.toDouble().pow(2.0)
-                ) / 2).toInt() // 对角线长度的一半
+                val viewRadius = (layout.diagonal / 2).toInt() // 对角线长度的一半
                 withChild(viewId) {
                     mathCircleAngle(
                         leftTop = {
@@ -141,7 +132,7 @@ class StickerLayout : ConstraintLayout {
                 constraintSet.constrainCircle(
                     R.id.action_move,
                     viewId,
-                    viewHeight / 2,
+                    layout.mHeight / 2,
                     0f
                 )
                 constraintSet.setTranslation(
@@ -157,15 +148,6 @@ class StickerLayout : ConstraintLayout {
                 constraintSet.applyTo(this@StickerLayout)
             }
         }
-    }
-
-    private fun onActionClick(action: Int) {
-        Log.d(TAG, "onActionClick")
-    }
-
-    private fun onActionTouchEvent(view: View, event: MotionEvent): Boolean {
-        Log.d(TAG, "onControllerTouched: $view")
-        return true
     }
 
     override fun onFinishInflate() {
@@ -186,10 +168,11 @@ class StickerLayout : ConstraintLayout {
         removeView(findViewById(viewId))
     }
 
-    inner class Move : RelativeTouchListener() {
-        var viewInitialTranslationX = 0F
-        var viewInitialTranslationY = 0F
-        var targetConstraint: Constraint? = null
+
+    inner class MoveAction: RelativeTouchListener() {
+        private var viewInitialTranslationX = 0F
+        private var viewInitialTranslationY = 0F
+        private var targetConstraint: Constraint? = null
 
         override fun onDown(v: View, ev: MotionEvent): Boolean {
             targetConstraint = constraintSet.getConstraint(focusedViewId)
@@ -237,15 +220,17 @@ class StickerLayout : ConstraintLayout {
     }
 
 
-    inner class Resize : RelativeTouchListener() {
-        var viewInitialWidth = 0
-        var viewInitialHeight = 0
-        var targetConstraint: Constraint? = null
+    inner class ResizeAndRotateAction : RelativeTouchListener() {
+        private var viewInitialWidth = 0F
+        private var viewInitialHeight = 0F
+        private var viewInitialRadius = 0F
+        private var targetConstraint: Constraint? = null
 
         override fun onDown(v: View, ev: MotionEvent): Boolean {
             targetConstraint = constraintSet.getConstraint(focusedViewId)
-            viewInitialWidth = targetConstraint!!.layout.mWidth
-            viewInitialHeight = targetConstraint!!.layout.mHeight
+            viewInitialWidth = targetConstraint!!.layout.mWidth.toFloat()
+            viewInitialHeight = targetConstraint!!.layout.mHeight.toFloat()
+            viewInitialRadius = sqrt(viewInitialWidth * viewInitialWidth + viewInitialHeight * viewInitialHeight)
             return true
         }
 
@@ -257,10 +242,16 @@ class StickerLayout : ConstraintLayout {
             dx: Float,
             dy: Float
         ) {
-            withConstraint {
-                constrainHeight(focusedViewId, (viewInitialHeight + dy).toInt())
-                constrainWidth(focusedViewId, (viewInitialWidth + dx).toInt())
+            val nextWidth = viewInitialWidth + dx // 缩放后的矩形宽度
+            val nextHeight = viewInitialHeight + dy // 缩放后的矩形高度
+            val nextDistance = sqrt(nextWidth * nextWidth + nextHeight * nextHeight) // 缩放后的对角线长度
+
+            val ra = nextDistance / viewInitialRadius // 计算他们的比例
+            withConstraint {// 将对角线比例应用到长宽中
+                constrainHeight(focusedViewId, (viewInitialHeight * ra).toInt())
+                constrainWidth(focusedViewId, (viewInitialWidth * ra).toInt())
             }
+            // 操作按钮也需要跟着动. TODO 和上面的操作 合并到一次事件中 优化性能
             attachActionView(focusedViewId)
         }
 
@@ -274,12 +265,13 @@ class StickerLayout : ConstraintLayout {
             velX: Float,
             velY: Float
         ) {
-            viewInitialHeight = 0
-            viewInitialWidth = 0
+            viewInitialHeight = 0F
+            viewInitialWidth = 0F
             targetConstraint = null
         }
     }
 }
+
 
 /**
  * 标准化角度
@@ -292,14 +284,14 @@ private fun normalizeAngle(angle: Float): Float {
     return (normalizedAngle + 90) % 360
 }
 
-fun ViewGroup.withChild(id: Int, action: View.() -> Unit) {
+private fun ViewGroup.withChild(id: Int, action: View.() -> Unit) {
     findViewById<View>(id).action()
 }
 
 /**
  * 计算 view每个角相对View中心Y轴顺时针的角度
  */
-fun View.mathCircleAngle(
+private fun View.mathCircleAngle(
     leftTop: (Float) -> Unit = {},
     rightTop: (Float) -> Unit = {},
     leftBottom: (Float) -> Unit = {},

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="sticker_layout_slider_color">#1976D2</color>
+    <color name="sticker_layout_action_bg_color">#1976D2</color>
+    <color name="sticker_layout_action_tint_color">#FFFFFF</color>
+</resources>

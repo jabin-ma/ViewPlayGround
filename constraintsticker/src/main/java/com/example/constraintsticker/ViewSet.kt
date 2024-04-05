@@ -1,5 +1,6 @@
 package com.example.constraintsticker
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
 import android.util.AttributeSet
@@ -13,12 +14,7 @@ import kotlin.math.min
 import kotlin.math.sin
 
 /**
- * Layer adds the ability to move and rotate a group of views as if they were contained
- * in a viewGroup
- * **Added in 2.0**
- * Methods such as setRotation(float) rotate all views about a common center.
- * For simple visibility manipulation use Group
- *
+ * 用于集中管理一组View, 例如统一缩放、移动、旋转等,其自身Z轴低于被管理的View
  */
 class ViewSet : ConstraintHelper {
     private var mRotationCenterX = Float.NaN
@@ -51,25 +47,24 @@ class ViewSet : ConstraintHelper {
     /**
      * @param attrs
      */
+    @SuppressLint("CustomViewStyleable")
     override fun init(attrs: AttributeSet) {
         super.init(attrs)
         mUseViewMeasure = false
-        if (attrs != null) {
-            val a = context.obtainStyledAttributes(
-                attrs,
-                R.styleable.ConstraintLayout_Layout
-            )
-            val n = a.getIndexCount()
-            for (i in 0 until n) {
-                val attr = a.getIndex(i)
-                if (attr == R.styleable.ConstraintLayout_Layout_android_visibility) {
-                    mApplyVisibilityOnAttach = true
-                } else if (attr == R.styleable.ConstraintLayout_Layout_android_elevation) {
-                    mApplyElevationOnAttach = true
-                }
+        val a = context.obtainStyledAttributes(
+            attrs,
+            R.styleable.ConstraintLayout_Layout
+        )
+        val n = a.getIndexCount()
+        for (i in 0 until n) {
+            val attr = a.getIndex(i)
+            if (attr == R.styleable.ConstraintLayout_Layout_android_visibility) {
+                mApplyVisibilityOnAttach = true
+            } else if (attr == R.styleable.ConstraintLayout_Layout_android_elevation) {
+                mApplyElevationOnAttach = true
             }
-            a.recycle()
         }
+        a.recycle()
     }
 
     override fun onAttachedToWindow() {
@@ -77,10 +72,7 @@ class ViewSet : ConstraintHelper {
         mContainer = parent as ConstraintLayout
         if (mApplyVisibilityOnAttach || mApplyElevationOnAttach) {
             val visibility = visibility
-            var elevation = 0f
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                elevation = getElevation()
-            }
+            val elevation: Float = elevation
             for (i in 0 until mCount) {
                 val id = mIds[i]
                 val view = mContainer!!.getViewById(id)
@@ -90,8 +82,6 @@ class ViewSet : ConstraintHelper {
                     }
                     if (mApplyElevationOnAttach) {
                         if (elevation > 0
-                            && Build.VERSION.SDK_INT
-                            >= Build.VERSION_CODES.LOLLIPOP
                         ) {
                             view.translationZ += elevation
                         }
@@ -212,10 +202,10 @@ class ViewSet : ConstraintHelper {
         widget.setWidth(0)
         widget.setHeight(0)
         calcCenters()
-        val left = mComputedMinX.toInt() - paddingLeft
-        val top = mComputedMinY.toInt() - paddingTop
-        val right = mComputedMaxX.toInt() + paddingRight
-        val bottom = mComputedMaxY.toInt() + paddingBottom
+        val left = mComputedMinX.toInt() + paddingLeft
+        val top = mComputedMinY.toInt() + paddingTop
+        val right = mComputedMaxX.toInt() - paddingRight
+        val bottom = mComputedMaxY.toInt() - paddingBottom
         layout(left, top, right, bottom)
         transform()
     }
@@ -312,6 +302,8 @@ class ViewSet : ConstraintHelper {
             val shifty = m21 * dx + m22 * dy - dy + mShiftY
             view.translationX = shiftx
             view.translationY = shifty
+            super.setTranslationX(shiftx)
+            super.setTranslationY(shifty)
             view.scaleY = mScaleY
             view.scaleX = mScaleX
             if (!java.lang.Float.isNaN(mGroupRotateAngle)) {

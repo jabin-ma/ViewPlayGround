@@ -5,7 +5,6 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:clipChildren="false"
     tools:context=".MainActivity">
 
     <ImageView
@@ -23,56 +22,59 @@
         android:id="@+id/target2"
         android:layout_width="250dp"
         android:layout_height="250dp"
+        android:layout_marginStart="50dp"
+        android:layout_marginTop="50dp"
         android:src="@drawable/ic_launcher_background"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+
+    <com.example.constraintsticker.ViewSet
+        android:id="@+id/action_widget_pack"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/bg_frame"
+        android:padding="@dimen/sticker_layout_action_viewset_padding"
+        android:visibility="gone"
+        app:constraint_referenced_ids="action_delete,action_resize,action_pin,action_move" />
+
     <com.example.constraintsticker.Action
         android:id="@id/action_delete"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
+        android:layout_width="@dimen/sticker_layout_action_icon_size"
+        android:layout_height="@dimen/sticker_layout_action_icon_size"
         android:background="@drawable/bg_round"
         android:scaleType="fitXY"
         android:src="@drawable/ic_close"
+        android:tint="@color/sticker_layout_action_tint_color"
         app:layout_constraintCircle="@id/target" />
 
     <com.example.constraintsticker.Action
         android:id="@id/action_resize"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
+        android:layout_width="@dimen/sticker_layout_action_icon_size"
+        android:layout_height="@dimen/sticker_layout_action_icon_size"
         android:background="@drawable/bg_round"
         android:scaleType="fitXY"
         android:src="@drawable/ic_resize"
+        android:tint="@color/sticker_layout_action_tint_color"
         app:layout_constraintCircle="@id/target" />
 
     <com.example.constraintsticker.Action
         android:id="@id/action_pin"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
+        android:layout_width="@dimen/sticker_layout_action_icon_size"
+        android:layout_height="@dimen/sticker_layout_action_icon_size"
         android:background="@drawable/bg_round"
         android:scaleType="fitXY"
         android:src="@drawable/ic_toplevel"
+        android:tint="@color/sticker_layout_action_tint_color"
         app:layout_constraintCircle="@id/target" />
 
     <com.example.constraintsticker.Action
         android:id="@id/action_move"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
+        android:layout_width="@dimen/sticker_layout_action_icon_size"
+        android:layout_height="@dimen/sticker_layout_action_icon_size"
+        android:background="@drawable/bg_round"
         android:scaleType="fitXY"
         android:src="@drawable/ic_drag"
+        android:tint="@color/sticker_layout_action_tint_color"
         app:layout_constraintCircle="@id/target" />
-
-    <com.example.constraintsticker.ViewSet
-        android:id="@+id/action_widget_pack"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        app:constraint_referenced_ids="action_delete,action_resize,action_pin,action_move" />
-
-    <com.example.constraintsticker.ConstraintSticker
-        android:id="@+id/helperrrr"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
 </com.example.constraintsticker.StickerLayout>

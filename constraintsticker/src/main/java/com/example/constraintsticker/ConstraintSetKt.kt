@@ -2,6 +2,8 @@ package com.example.constraintsticker
 
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 class ConstraintSetKt(private val layout: ConstraintLayout) : ConstraintSet() {
     init {
@@ -13,7 +15,7 @@ class ConstraintSetKt(private val layout: ConstraintLayout) : ConstraintSet() {
     }
 }
 
-fun ConstraintSetKt.withConstraint(id:Int , action: ConstraintSet.Constraint.() -> Unit) {
+fun ConstraintSetKt.withConstraint(id: Int, action: ConstraintSet.Constraint.() -> Unit) {
     getConstraint(id).action()
 }
 
@@ -21,3 +23,9 @@ fun ConstraintSetKt.beginTransaction(action: ConstraintSet.() -> Unit) {
     action()
     apply()
 }
+
+/**
+ * 对角线长度
+ */
+val ConstraintSet.Layout.diagonal: Float
+    get() = sqrt(1.0F * mWidth * mWidth + mHeight * mHeight)

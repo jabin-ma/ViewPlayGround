@@ -5,5 +5,7 @@
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
     </style>
 
-    <style name="Theme.PlayGround" parent="Base.Theme.PlayGround" />
+    <style name="Theme.PlayGround" parent="Base.Theme.PlayGround">
+        <item name="android:windowFullscreen">true</item>
+    </style>
 </resources>

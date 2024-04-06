@@ -1,4 +1,4 @@
-package com.example.constraintsticker
+package com.flexos.stickerlayout
 
 import android.content.Context
 import android.util.AttributeSet
@@ -9,7 +9,6 @@ import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintHelper
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet.Constraint
-import androidx.core.content.res.ResourcesCompat
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.sqrt
@@ -38,7 +37,7 @@ class StickerLayout(context: Context, attrs: AttributeSet) : ConstraintLayout(co
      * 安装view的行为,比如设置监听 用于进入或退出编辑模式.
      */
     private fun setupView(view: View) {
-        if (view is ConstraintHelper) {
+        if (view is HeightLight || view is ConstraintHelper) {
 
         } else if (view is Action) {
             when (view.id) {
@@ -74,9 +73,6 @@ class StickerLayout(context: Context, attrs: AttributeSet) : ConstraintLayout(co
 
     private fun exitEditMode() {
         if (focusedViewId != NO_ID) {
-            withChild(focusedViewId) {
-                foreground = null
-            }
             focusedViewId = NO_ID
             beginTransaction {
                 setVisibility(R.id.action_widget_pack, GONE)
@@ -91,9 +87,10 @@ class StickerLayout(context: Context, attrs: AttributeSet) : ConstraintLayout(co
     private fun enterEditMode(view: Int) {
         exitEditMode()
         focusedViewId = view
-        withChild(focusedViewId) {
+/*        withChild(focusedViewId) {
             foreground = ResourcesCompat.getDrawable(resources, R.drawable.bg_frame, null)
-        }
+            foreground = resources.getDrawable(R.drawable.bg_frame,null)
+        }*/
         attachActionView(focusedViewId)
         setOnClickListener {
             exitEditMode()
@@ -104,7 +101,7 @@ class StickerLayout(context: Context, attrs: AttributeSet) : ConstraintLayout(co
         if (viewId != NO_ID) {
             constraintSet.withConstraint(viewId) {
                 val viewRadius = (layout.diagonal / 2).toInt() // 对角线长度的一半
-                withChild(viewId) {
+                withChild(viewId){
                     mathCircleAngle(
                         leftTop = {
                             Log.d(TAG, "mathCircle leftTop $it")
@@ -142,6 +139,7 @@ class StickerLayout(context: Context, attrs: AttributeSet) : ConstraintLayout(co
                     layout.mHeight / 2,
                     0f
                 )
+
                 constraintSet.setTranslation(
                     R.id.action_widget_pack,
                     transform.translationX,
@@ -157,6 +155,7 @@ class StickerLayout(context: Context, attrs: AttributeSet) : ConstraintLayout(co
         }
     }
 
+
     override fun onFinishInflate() {
         super.onFinishInflate()
         constraintSet = ConstraintSetKt(this)
@@ -167,10 +166,13 @@ class StickerLayout(context: Context, attrs: AttributeSet) : ConstraintLayout(co
      */
     private fun onActionPin(view: Int) {
         findViewById<View>(view).bringToFront()
-        findViewById<ViewSet>(R.id.action_widget_pack).bringToFront()
-        constraintSet.apply() // 要重新apply一下 否则位置会不正确
+        findViewById<ActionPanel>(R.id.action_widget_pack).bringToFront()
+        constraintSet.apply() // 要重新apply一下 否则按钮位置会不正确
     }
 
+    /**
+     * 删除这个view
+     */
     private fun onActionDelete(viewId: Int) {
         exitEditMode()
         removeView(findViewById(viewId))
@@ -312,7 +314,7 @@ class StickerLayout(context: Context, attrs: AttributeSet) : ConstraintLayout(co
 
 
 /**
- * 标准化角度
+ * 标准化角度(Y轴为0度)
  */
 private fun normalizeAngle(angle: Float): Float {
     var normalizedAngle = angle
@@ -323,7 +325,7 @@ private fun normalizeAngle(angle: Float): Float {
 }
 
 private fun ViewGroup.withChild(id: Int, action: View.() -> Unit) {
-    findViewById<View>(id).action()
+    action(findViewById(id))
 }
 
 private fun MotionEvent.absAngle(x: Float, y: Float): Float {
@@ -343,8 +345,8 @@ private fun View.mathCircleAngle(
     leftBottom: (Float) -> Unit = {},
     rightBottom: (Float) -> Unit = {}
 ) {
-    val centerX = (left + right) / 2
-    val centerY = (top + bottom) / 2
+    val centerX = left+ width / 2
+    val centerY = top + height / 2
 
     leftTop(
         normalizeAngle(

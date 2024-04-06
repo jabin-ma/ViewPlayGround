@@ -4,4 +4,6 @@
     <item name="action_resize" type="id"/>
     <item name="action_delete" type="id"/>
     <item name="action_pin" type="id"/>
+    <item name="action_widget_pack" type="id"/>
+    <item name="action_background" type="id"/>
 </resources>

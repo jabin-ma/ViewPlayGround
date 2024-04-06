@@ -1,10 +1,10 @@
-package com.example.constraintsticker
+package com.flexos.stickerlayout
 
 import android.content.Context
 import android.util.AttributeSet
-import androidx.appcompat.widget.AppCompatImageView
+import android.widget.ImageView
 
-class Action : AppCompatImageView {
+class Action : ImageView {
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(

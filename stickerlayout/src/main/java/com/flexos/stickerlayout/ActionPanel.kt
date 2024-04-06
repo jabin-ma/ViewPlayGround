@@ -1,8 +1,7 @@
-package com.example.constraintsticker
+package com.flexos.stickerlayout
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.os.Build
 import android.util.AttributeSet
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintHelper
@@ -16,7 +15,7 @@ import kotlin.math.sin
 /**
  * 用于集中管理一组View, 例如统一缩放、移动、旋转等,其自身Z轴低于被管理的View
  */
-class ViewSet : ConstraintHelper {
+class ActionPanel : ConstraintHelper {
     private var mRotationCenterX = Float.NaN
     private var mRotationCenterY = Float.NaN
     private var mGroupRotateAngle = Float.NaN
@@ -310,9 +309,6 @@ class ViewSet : ConstraintHelper {
             }
         }
     }
-
-
-
 
     /**
      *

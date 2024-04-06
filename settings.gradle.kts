@@ -19,3 +19,4 @@ dependencyResolutionManagement {
 rootProject.name = "PlayGround"
 // ConstraintSticker
 include(":constraintsticker")
+include(":stickerlayout")

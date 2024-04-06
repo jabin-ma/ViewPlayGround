@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.constraintsticker
+package com.flexos.stickerlayout
 
 import android.graphics.PointF
 import android.view.MotionEvent
@@ -103,7 +103,6 @@ abstract class RelativeTouchListener : View.OnTouchListener {
                 if (!onDown(v, ev)) {
                     return false
                 }
-
                 // Grab the touch slop, it might have changed if the config changed since the
                 // last gesture.
                 touchSlop = ViewConfiguration.get(v.context).scaledTouchSlop

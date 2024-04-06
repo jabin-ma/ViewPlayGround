@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="sticker_layout_action_icon_size" >32dp</dimen>
-    <dimen name="sticker_layout_action_viewset_padding" >16dp</dimen>
+    <dimen name="sticker_layout_action_background_padding" >14dp</dimen>
 </resources>

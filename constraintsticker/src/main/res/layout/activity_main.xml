@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.example.constraintsticker.StickerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.flexos.stickerlayout.StickerLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingTop="100dp"
+    android:paddingTop="10dp"
     tools:context=".MainActivity">
 
     <ImageView
@@ -18,7 +18,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-
     <ImageView
         android:id="@+id/target2"
         android:layout_width="250dp"
@@ -29,15 +28,25 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-
-    <com.example.constraintsticker.ViewSet
+    <com.flexos.stickerlayout.ActionPanel
         android:id="@+id/action_widget_pack"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:constraint_referenced_ids="action_background,action_move,action_delete,action_resize,action_pin" />
+
+    <com.flexos.stickerlayout.HeightLight
+        android:id="@id/action_background"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:visibility="gone"
-        app:constraint_referenced_ids="action_delete,action_resize,action_pin,action_move" />
+        android:layout_margin="@dimen/sticker_layout_action_background_padding"
+        android:background="@drawable/bg_frame"
+        app:layout_constraintBottom_toBottomOf="@id/action_resize"
+        app:layout_constraintEnd_toEndOf="@id/action_resize"
+        app:layout_constraintStart_toStartOf="@id/action_delete"
+        app:layout_constraintTop_toTopOf="@id/action_delete" />
 
-    <com.example.constraintsticker.Action
+    <com.flexos.stickerlayout.Action
         android:id="@id/action_delete"
         android:layout_width="@dimen/sticker_layout_action_icon_size"
         android:layout_height="@dimen/sticker_layout_action_icon_size"
@@ -47,7 +56,7 @@
         android:tint="@color/sticker_layout_action_tint_color"
         app:layout_constraintCircle="@id/target" />
 
-    <com.example.constraintsticker.Action
+    <com.flexos.stickerlayout.Action
         android:id="@id/action_resize"
         android:layout_width="@dimen/sticker_layout_action_icon_size"
         android:layout_height="@dimen/sticker_layout_action_icon_size"
@@ -57,7 +66,7 @@
         android:tint="@color/sticker_layout_action_tint_color"
         app:layout_constraintCircle="@id/target" />
 
-    <com.example.constraintsticker.Action
+    <com.flexos.stickerlayout.Action
         android:id="@id/action_pin"
         android:layout_width="@dimen/sticker_layout_action_icon_size"
         android:layout_height="@dimen/sticker_layout_action_icon_size"
@@ -67,7 +76,7 @@
         android:tint="@color/sticker_layout_action_tint_color"
         app:layout_constraintCircle="@id/target" />
 
-    <com.example.constraintsticker.Action
+    <com.flexos.stickerlayout.Action
         android:id="@id/action_move"
         android:layout_width="@dimen/sticker_layout_action_icon_size"
         android:layout_height="@dimen/sticker_layout_action_icon_size"
@@ -76,4 +85,4 @@
         android:src="@drawable/ic_drag"
         android:tint="@color/sticker_layout_action_tint_color"
         app:layout_constraintCircle="@id/target" />
-</com.example.constraintsticker.StickerLayout>
+</com.flexos.stickerlayout.StickerLayout>

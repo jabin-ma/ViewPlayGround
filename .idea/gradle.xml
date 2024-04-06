@@ -10,6 +10,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/constraintsticker" />
+            <option value="$PROJECT_DIR$/stickerlayout" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="false" />
